@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from requests.exceptions import RequestException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 
 from Backend.graph_client import get_managed_devices
 from Backend.health import calculate_health
@@ -10,16 +11,48 @@ app = FastAPI(
     title="EndpointIQ API",
     description="AI-powered Endpoint Intelligence API",
     version="1.0.0",
+    servers=[
+        {
+            "url": "https://reimagined-palm-tree-r4x59px6vqvr3p99v-8000.app.github.dev",
+            "description": "GitHub Codespaces"
+        }
+    ]
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://reimagined-palm-tree-r4x59px6vqvr3p99v-8000.app.github.dev"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+
+    openapi_schema["servers"] = [
+        {
+            "url": "https://reimagined-palm-tree-r4x59px6vqvr3p99v-8000.app.github.dev",
+            "description": "GitHub Codespaces"
+        }
+    ]
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
 
 # -----------------------------------------
 # Root
@@ -52,6 +85,51 @@ def devices():
             status_code=502,
             detail=f"Microsoft Graph request failed: {error}"
         )
+
+    # ===============================
+# Dashboard Summary
+# ===============================
+
+@app.get("/summary")
+def summary():
+    try:
+        data = get_managed_devices()
+        devices = data.get("value", [])
+
+        total = len(devices)
+
+        healthy = sum(
+            1 for d in devices
+            if d.get("complianceState") == "compliant"
+        )
+
+        unhealthy = total - healthy
+
+        windows11 = sum(
+            1 for d in devices
+            if str(d.get("operatingSystem", "")).lower() == "windows"
+            and d.get("osVersion", "").startswith("10.0.22")
+        )
+
+        windows10 = sum(
+            1 for d in devices
+            if str(d.get("operatingSystem", "")).lower() == "windows"
+            and not d.get("osVersion", "").startswith("10.0.22")
+        )
+
+        compliance = round((healthy / total) * 100, 2) if total else 0
+
+        return {
+            "totalDevices": total,
+            "healthyDevices": healthy,
+            "unhealthyDevices": unhealthy,
+            "windows11": windows11,
+            "windows10": windows10,
+            "compliance": compliance
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # -----------------------------------------
@@ -255,10 +333,10 @@ def device_health():
 
 
 # -----------------------------------------
-# Environment Summary
+# AI Environment Summary
 # -----------------------------------------
-@app.get("/summary")
-def summary():
+@app.get("/ai-summary")
+def ai_summary():
     try:
 
         data = get_managed_devices()
