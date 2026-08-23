@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 import AIAssistant from "../components/AIAssistant";
@@ -12,9 +11,14 @@ import WindowsVersionChart from "../charts/WindowsVersionChart";
 import HealthTrend from "../charts/HealthTrend";
 import ComplianceTrend from "../charts/ComplianceTrend";
 
+
 function Dashboard() {
-  const [devices, setDevices] = useState([]);
-  const [search, setSearch] = useState("");
+
+  /*
+   * ============================================
+   * DASHBOARD SUMMARY
+   * ============================================
+   */
 
   const [summary, setSummary] = useState({
     totalDevices: 0,
@@ -25,93 +29,136 @@ function Dashboard() {
     compliance: 0,
   });
 
+
+  /*
+   * ============================================
+   * LOAD DASHBOARD DATA
+   * ============================================
+   */
+
   useEffect(() => {
-    loadDevices();
     loadSummary();
   }, []);
 
-  async function loadDevices() {
-    try {
-      const res = await axios.get("http://127.0.0.1:8000/devices");
-      setDevices(res.data.devices || []);
-    } catch (err) {
-      console.error("Failed to load devices:", err);
-    }
-  }
 
   async function loadSummary() {
+
     try {
-      const res = await axios.get("http://127.0.0.1:8000/summary");
+
+      const res = await axios.get(
+        "http://127.0.0.1:8000/summary"
+      );
+
       setSummary(res.data);
+
     } catch (err) {
-      console.error("Failed to load summary:", err);
+
+      console.error(
+        "Failed to load summary:",
+        err
+      );
+
     }
+
   }
 
-  const filteredDevices = useMemo(() => {
-    const text = search.toLowerCase();
 
-    return devices.filter((device) => {
-      return (
-        (device.deviceName || "").toLowerCase().includes(text) ||
-        (device.userPrincipalName || "").toLowerCase().includes(text) ||
-        (device.emailAddress || "").toLowerCase().includes(text) ||
-        (device.operatingSystem || "").toLowerCase().includes(text)
-      );
-    });
-  }, [devices, search]);
-
-  const getHealthScore = (device) => {
-    switch (device.complianceState) {
-      case "compliant":
-        return 100;
-
-      case "noncompliant":
-        return 40;
-
-      default:
-        return 70;
-    }
-  };
+  /*
+   * ============================================
+   * OVERALL HEALTH
+   * ============================================
+   *
+   * This is based on the backend summary:
+   *
+   * healthy devices / total devices
+   *
+   * multiplied by 100.
+   */
 
   const overallHealth =
     summary.totalDevices > 0
       ? Math.round(
-          (summary.healthyDevices / summary.totalDevices) * 100
+          (summary.healthyDevices /
+            summary.totalDevices) *
+            100
         )
       : 0;
 
+
+  /*
+   * ============================================
+   * DASHBOARD
+   * ============================================
+   */
+
   return (
+
     <div className="flex min-h-screen bg-slate-100">
 
-      {/* LEFT SIDEBAR */}
+
+      {/* ======================================
+          LEFT SIDEBAR
+      ======================================= */}
+
       <Sidebar />
 
-      {/* MAIN AREA */}
+
+      {/* ======================================
+          MAIN AREA
+      ======================================= */}
+
       <div className="flex-1 min-w-0">
+
+
+        {/* ====================================
+            TOP NAVBAR
+        ===================================== */}
 
         <Navbar />
 
+
+        {/* ====================================
+            MAIN CONTENT
+        ===================================== */}
+
         <main className="max-w-7xl mx-auto p-8">
 
-          {/* HEADER */}
+
+          {/* ==================================
+              HEADER
+          =================================== */}
+
           <div className="mb-8">
 
             <div className="flex items-center justify-between">
 
+
+              {/* LEFT */}
+
               <div>
+
                 <p className="text-sm font-medium text-blue-600 mb-1">
                   EndpointIQ
                 </p>
 
 
+                <h1 className="text-2xl font-bold text-slate-900">
+                  EndpointIQ Dashboard
+                </h1>
+
+
                 <p className="text-slate-500 mt-2">
-                  Monitor your endpoint health, compliance and device
-                  experience.
+                  Monitor your endpoint health,
+                  compliance and device experience.
                 </p>
+
               </div>
 
+
+              {/* LAST UPDATED */}
+
               <div className="text-right">
+
                 <p className="text-xs text-slate-400">
                   Last updated
                 </p>
@@ -119,6 +166,7 @@ function Dashboard() {
                 <p className="text-sm font-medium text-slate-600">
                   Just now
                 </p>
+
               </div>
 
             </div>
@@ -126,15 +174,29 @@ function Dashboard() {
           </div>
 
 
-          {/* KPI CARDS */}
+          {/* ==================================
+              KPI CARDS
+          =================================== */}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
 
-            {/* Devices */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+
+            {/* =================================
+                MY DEVICES
+            ================================== */}
+
+            <div
+              className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition"
+              onClick={() => {
+                window.location.href =
+                  "/devices";
+              }}
+            >
 
               <p className="text-sm font-medium text-slate-500">
                 My Devices
               </p>
+
 
               <div className="flex items-end justify-between mt-3">
 
@@ -148,6 +210,7 @@ function Dashboard() {
 
               </div>
 
+
               <p className="text-xs text-slate-400 mt-2">
                 Managed endpoints
               </p>
@@ -155,12 +218,22 @@ function Dashboard() {
             </div>
 
 
-            {/* Healthy */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            {/* =================================
+                HEALTHY
+            ================================== */}
+
+            <div
+              className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-green-300 transition"
+              onClick={() => {
+                window.location.href =
+                  "/devices?filter=compliant";
+              }}
+            >
 
               <p className="text-sm font-medium text-slate-500">
                 Healthy
               </p>
+
 
               <div className="flex items-end justify-between mt-3">
 
@@ -168,11 +241,13 @@ function Dashboard() {
                   {summary.healthyDevices}
                 </p>
 
+
                 <span className="text-2xl">
                   🟢
                 </span>
 
               </div>
+
 
               <p className="text-xs text-slate-400 mt-2">
                 Healthy endpoints
@@ -181,12 +256,22 @@ function Dashboard() {
             </div>
 
 
-            {/* Compliance */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            {/* =================================
+                COMPLIANCE
+            ================================== */}
+
+            <div
+              className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition"
+              onClick={() => {
+                window.location.href =
+                  "/devices?filter=compliant";
+              }}
+            >
 
               <p className="text-sm font-medium text-slate-500">
                 Compliance
               </p>
+
 
               <div className="flex items-end justify-between mt-3">
 
@@ -194,11 +279,13 @@ function Dashboard() {
                   {summary.compliance}%
                 </p>
 
+
                 <span className="text-2xl">
                   🛡️
                 </span>
 
               </div>
+
 
               <p className="text-xs text-slate-400 mt-2">
                 Overall compliance
@@ -207,12 +294,22 @@ function Dashboard() {
             </div>
 
 
-            {/* Attention */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            {/* =================================
+                ATTENTION REQUIRED
+            ================================== */}
+
+            <div
+              className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-orange-300 transition"
+              onClick={() => {
+                window.location.href =
+                  "/devices?filter=noncompliant";
+              }}
+            >
 
               <p className="text-sm font-medium text-slate-500">
                 Attention Required
               </p>
+
 
               <div className="flex items-end justify-between mt-3">
 
@@ -220,11 +317,13 @@ function Dashboard() {
                   {summary.unhealthyDevices}
                 </p>
 
+
                 <span className="text-2xl">
                   ⚠️
                 </span>
 
               </div>
+
 
               <p className="text-xs text-slate-400 mt-2">
                 Endpoints requiring attention
@@ -235,15 +334,24 @@ function Dashboard() {
           </div>
 
 
-          {/* HEALTH OVERVIEW + AI */}
+          {/* ==================================
+              HEALTH + AI ASSISTANT
+          =================================== */}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
-            {/* Health Score */}
+
+            {/* =================================
+                ENDPOINT HEALTH
+            ================================== */}
+
             <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+
 
               <div className="flex items-center justify-between">
 
                 <div>
+
                   <h2 className="text-lg font-semibold text-slate-900">
                     Endpoint Health
                   </h2>
@@ -251,13 +359,18 @@ function Dashboard() {
                   <p className="text-sm text-slate-500 mt-1">
                     Overall device health
                   </p>
+
                 </div>
+
 
                 <span className="text-2xl">
                   ❤️
                 </span>
 
               </div>
+
+
+              {/* SCORE */}
 
               <div className="flex items-center justify-center py-8">
 
@@ -275,20 +388,29 @@ function Dashboard() {
 
               </div>
 
+
+              {/* HEALTH STATUS */}
+
               <div className="text-center">
 
                 {overallHealth >= 90 ? (
+
                   <span className="text-green-600 font-semibold">
                     Excellent endpoint health
                   </span>
+
                 ) : overallHealth >= 70 ? (
+
                   <span className="text-yellow-600 font-semibold">
                     Some attention required
                   </span>
+
                 ) : (
+
                   <span className="text-red-600 font-semibold">
                     Immediate attention required
                   </span>
+
                 )}
 
               </div>
@@ -296,7 +418,10 @@ function Dashboard() {
             </div>
 
 
-            {/* AI Assistant */}
+            {/* =================================
+                AI ASSISTANT
+            ================================== */}
+
             <div className="lg:col-span-2">
 
               <AIAssistant />
@@ -306,35 +431,21 @@ function Dashboard() {
           </div>
 
 
-          {/* EXISTING EXECUTIVE SUMMARY */}
+          {/* ==================================
+              EXECUTIVE SUMMARY
+          =================================== */}
+
           <div className="mb-8">
+
             <ExecutiveSummary />
-          </div>
-
-
-          {/* SEARCH */}
-          <div className="mb-8">
-
-            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-
-              <label className="text-sm font-medium text-slate-700">
-                Search My Devices
-              </label>
-
-              <input
-                type="text"
-                placeholder="Search by device, user or operating system..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full mt-3 rounded-xl border border-slate-300 bg-white p-4 outline-none focus:ring-2 focus:ring-blue-500"
-              />
-
-            </div>
 
           </div>
 
 
-          {/* CHARTS */}
+          {/* ==================================
+              DEVICE / OS CHARTS
+          =================================== */}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 
             <DevicePieChart />
@@ -343,6 +454,10 @@ function Dashboard() {
 
           </div>
 
+
+          {/* ==================================
+              HEALTH / COMPLIANCE TRENDS
+          =================================== */}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 
@@ -353,202 +468,12 @@ function Dashboard() {
           </div>
 
 
-          {/* DEVICE TABLE */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-
-            <div className="p-6 border-b border-slate-200">
-
-              <h2 className="text-xl font-semibold text-slate-900">
-                My Devices
-              </h2>
-
-              <p className="text-sm text-slate-500 mt-1">
-                Devices currently managed by EndpointIQ
-              </p>
-
-            </div>
-
-
-            <div className="overflow-x-auto">
-
-              <table className="min-w-full">
-
-                <thead className="bg-slate-800 text-white">
-
-                  <tr>
-
-                    <th className="px-6 py-4 text-left">
-                      Device
-                    </th>
-
-                    <th className="px-6 py-4 text-left">
-                      User
-                    </th>
-
-                    <th className="px-6 py-4 text-left">
-                      Operating System
-                    </th>
-
-                    <th className="px-6 py-4 text-left">
-                      Compliance
-                    </th>
-
-                    <th className="px-6 py-4 text-left">
-                      Health
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                  {filteredDevices.map((device) => (
-
-                    <tr
-                      key={device.id}
-                      className="border-b border-slate-100 hover:bg-slate-50 transition"
-                    >
-
-                      <td className="px-6 py-4 font-semibold">
-
-                        <Link
-                          to={`/device/${encodeURIComponent(
-                            device.deviceName
-                          )}`}
-                          className="text-blue-600 hover:text-blue-800 hover:underline"
-                        >
-                          {device.deviceName}
-                        </Link>
-
-                      </td>
-
-
-                      <td className="px-6 py-4 text-slate-600">
-                        {device.userPrincipalName ||
-                          device.emailAddress ||
-                          "Unassigned"}
-                      </td>
-
-
-                      <td className="px-6 py-4 text-slate-600">
-                        {device.operatingSystem || "Unknown"}
-                      </td>
-
-
-                      <td className="px-6 py-4">
-                        <ComplianceBadge
-                          state={device.complianceState}
-                        />
-                      </td>
-
-
-                      <td className="px-6 py-4">
-                        <HealthBadge
-                          score={getHealthScore(device)}
-                        />
-                      </td>
-
-                    </tr>
-
-                  ))}
-
-
-                  {filteredDevices.length === 0 && (
-
-                    <tr>
-
-                      <td
-                        colSpan="5"
-                        className="px-6 py-12 text-center text-slate-500"
-                      >
-                        No devices found.
-                      </td>
-
-                    </tr>
-
-                  )}
-
-                </tbody>
-
-              </table>
-
-            </div>
-
-          </div>
-
         </main>
 
       </div>
 
     </div>
-  );
-}
 
-
-/* Compliance Badge */
-
-function ComplianceBadge({ state }) {
-
-  switch (state) {
-
-    case "compliant":
-
-      return (
-        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold text-sm">
-          🟢 Compliant
-        </span>
-      );
-
-    case "noncompliant":
-
-      return (
-        <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full font-semibold text-sm">
-          🔴 Non-Compliant
-        </span>
-      );
-
-    default:
-
-      return (
-        <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-semibold text-sm">
-          🟡 Unknown
-        </span>
-      );
-  }
-}
-
-
-/* Health Badge */
-
-function HealthBadge({ score }) {
-
-  let colour = "";
-  let icon = "";
-
-  if (score >= 90) {
-
-    colour = "bg-green-100 text-green-700";
-    icon = "🟢";
-
-  } else if (score >= 70) {
-
-    colour = "bg-yellow-100 text-yellow-700";
-    icon = "🟡";
-
-  } else {
-
-    colour = "bg-red-100 text-red-700";
-    icon = "🔴";
-  }
-
-  return (
-    <span
-      className={`${colour} px-3 py-1 rounded-full font-semibold text-sm`}
-    >
-      {icon} {score}%
-    </span>
   );
 }
 

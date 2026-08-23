@@ -1,35 +1,215 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
 import ConsumerDashboard from "./pages/ConsumerDashboard";
 import DeviceDetails from "./pages/DeviceDetails";
+import Devices from "./pages/Devices";
+import Users from "./pages/Users";
+import Analytics from "./pages/Analytics";
+import Security from "./pages/Security";
+import AIAssistantPage from "./pages/AIAssistantPage";
+import Settings from "./pages/Settings";
 
-function App() {
+import Login from "./pages/Login";
+
+
+/*
+ * ============================================
+ * AUTHENTICATION CHECK
+ * ============================================
+ */
+
+function ProtectedRoute({
+  children,
+}) {
+
+  const authenticated =
+    localStorage.getItem(
+      "endpointiq_authenticated"
+    ) === "true";
+
+  if (!authenticated) {
+
+    return (
+      <Navigate
+        to="/login"
+        replace
+      />
+    );
+
+  }
+
+  return children;
+}
+
+
+export default function App() {
+
   return (
+
     <BrowserRouter>
+
       <Routes>
 
-        {/* Main Dashboard */}
+
+        {/* ==================================
+            LOGIN
+        =================================== */}
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+
+        {/* ==================================
+            DASHBOARD
+        =================================== */}
+
         <Route
           path="/"
-          element={<Dashboard />}
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
         />
 
-        {/* Consumer Dashboard */}
+
+        {/* ==================================
+            CONSUMER
+        =================================== */}
+
         <Route
           path="/consumer"
-          element={<ConsumerDashboard />}
+          element={
+            <ProtectedRoute>
+              <ConsumerDashboard />
+            </ProtectedRoute>
+          }
         />
 
-        {/* Device Details */}
+
+        {/* ==================================
+            DEVICES
+        =================================== */}
+
+        <Route
+          path="/devices"
+          element={
+            <ProtectedRoute>
+              <Devices />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* ==================================
+            DEVICE DETAILS
+        =================================== */}
+
         <Route
           path="/device/:id"
-          element={<DeviceDetails />}
+          element={
+            <ProtectedRoute>
+              <DeviceDetails />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* ==================================
+            USERS
+        =================================== */}
+
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <Users />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* ==================================
+            ANALYTICS
+        =================================== */}
+
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <Analytics />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* ==================================
+            SECURITY
+        =================================== */}
+
+        <Route
+          path="/security"
+          element={
+            <ProtectedRoute>
+              <Security />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* ==================================
+            AI ASSISTANT
+        =================================== */}
+
+        <Route
+          path="/ai-assistant"
+          element={
+            <ProtectedRoute>
+              <AIAssistantPage />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* ==================================
+            SETTINGS
+        =================================== */}
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* ==================================
+            UNKNOWN ROUTE
+        =================================== */}
+
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/"
+              replace
+            />
+          }
         />
 
       </Routes>
+
     </BrowserRouter>
+
   );
 }
-
-export default App;
