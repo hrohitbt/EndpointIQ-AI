@@ -17,3 +17,21 @@ node_modules/
 
 # VS Code
 .vscode/
+
+# Captured device telemetry (real hostnames, users, IPs, installed software)
+# The "*" also covers the "EndpointIQ-Agent-API old" folder variant.
+**/EndpointIQ-Agent-API*/data/
+**/EndpointIQ-Agent-API*/telemetry.json
+**/EndpointIQ-Agent-API*/*.log
+
+# Agent logs
+**/EndpointIQ-Agent/logs/
+
+# Build output (PyInstaller / Vite) — not source
+**/EndpointIQ-Agent/build/
+**/EndpointIQ-Agent/dist/
+**/EndpointIQ-Agent-Portal/dist/
+
+# Unpacked npm dependency contents (not a real project folder — no
+# wrapping node_modules/, so the rule above doesn't catch it)
+/not main  endpoint IQ/

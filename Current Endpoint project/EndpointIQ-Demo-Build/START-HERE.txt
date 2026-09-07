@@ -1,0 +1,73 @@
+EndpointIQ — Demo Build (6-feature set)
+========================================
+
+What changed from your last v2 upload
+--------------------------------------
+1. Fleet Overview            — unchanged, already live (Dashboard.jsx)
+2. Device drilldown          — unchanged, already live (AgentDeviceDetails.jsx)
+3. Security compliance list  — unchanged, already live (fleet_insights)
+4. Crash/issue surfacing     — unchanged, already live (fleet_insights)
+5. Real authentication       — NEW: replaces the hardcoded client-side password
+6. Compliance trend chart    — NEW: daily rollups + a line chart on the dashboard
+
+Auth model (new)
+-----------------
+Two separate credentials, on purpose:
+
+- Agent -> API:  a shared key sent as header  X-Agent-Key
+- User  -> API:  username/password -> POST /api/agent/auth/login
+                 returns a signed token, sent as  Authorization: Bearer <token>
+                 (8 hour session, then re-login)
+
+Defaults (override with env vars before a real rollout):
+  ENDPOINTIQ_AGENT_KEY       = dev-agent-key-change-me
+  ENDPOINTIQ_ADMIN_USER      = admin
+  ENDPOINTIQ_ADMIN_PASSWORD  = EndpointIQ@123
+  ENDPOINTIQ_TOKEN_SECRET    = dev-token-secret-change-me
+
+Set real values for these four before this touches anything beyond your
+own machine — the defaults exist only so the demo runs out of the box.
+
+Run the API
+------------
+1. cd EndpointIQ-Agent-API
+2. Activate your existing .venv (fastapi/uvicorn/pydantic already installed there)
+3. uvicorn main:app --host 0.0.0.0 --port 8001
+
+Run the Portal
+----------------
+1. cd EndpointIQ-Agent-Portal
+2. npm install          (recharts is already in package.json — no new installs needed)
+3. Create .env.local:
+     VITE_AGENT_API_URL=http://<API-HOST>:8001/api/agent
+4. npm run dev
+5. Log in with the admin credentials above (or whatever you set them to)
+
+Run the Agent
+---------------
+1. cd EndpointIQ-Agent
+2. Set env vars before running (or before rebuilding the .exe):
+     set ENDPOINTIQ_API_URL=http://<API-HOST>:8001
+     set ENDPOINTIQ_AGENT_KEY=<same value as ENDPOINTIQ_AGENT_KEY on the API>
+3. python agent.py
+   (If you rebuild the .exe with PyInstaller, these env vars must be set on
+   the machine running the .exe, or hardcode them in api_client.py instead.)
+
+Getting a trend line to show
+------------------------------
+The chart needs more than one day of data. Today's snapshot is recorded
+automatically the first time the dashboard loads. Run the agent again
+tomorrow (or edit data/trends.json by hand to backfill demo days) if you
+want the line populated before the actual demo.
+
+Still not included (this is the roadmap slide, not a bug)
+-------------------------------------------------------------
+- Full time-series DB (trends.json is a flat file — fine for a demo, not for scale)
+- Correlation-based root-cause insights (currently pattern-based, not correlated)
+- Threshold alerting / notifications
+- Remediation actions
+- Microsoft Entra ID login (Login.jsx already has the placeholder button + comment)
+- The older Users/Analytics/Security/AI-assistant pages still point at a
+  dead port-8000 API from an earlier prototype — left untouched since they
+  were out of scope for this 6-feature pass. Recommend hiding those nav
+  entries before the demo so nobody clicks into a broken page live.
